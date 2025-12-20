@@ -11,6 +11,19 @@ stop_mainstar = False
 gt, gT, gL, gR = 0.0, 0.0, 0.0, 0.0
 
 
+def get_tau(mass=None, metallicity=None):
+    if mass is None or metallicity is None:
+        return None
+    if mass >= 0.799 and mass <= 2.0:
+        tau_base = math.pow(mass, -3) * 10000
+    elif mass > 2.0 and mass <= 3.33:
+        tau_base = math.pow(mass, -3) * (0.3 * mass / 0.6) * 10000
+    elif mass > 3.33 and mass < 8.001:
+        tau_base = math.pow(mass, -3) * (5.0 / 3.0) * 10000
+    else:
+        return 0 # TODO: 补全
+    return math.pow((metallicity / 0.02), 0.19953) * tau_base
+
 def mainstar(mass=None, metallicity=None, end_time=None, step_size=None, refresh_time=None):
     """
     恒星演化主函数
@@ -51,7 +64,7 @@ def mainstar(mass=None, metallicity=None, end_time=None, step_size=None, refresh
         M = L = Mc = z = t = dt = XHc = XHec = mu = Tc = Tb = k = tend = pp = cno = 0.0
         mu0 = Tc0 = Msun = c = cno0 = pp0 = XH0 = XHe0 = delta_mass = n = tau = recommend = half = tau_r = 0.0
         R = R0 = T = 0.0
-        beta = gamma = factor = 0.0  # V1.1新增内容!
+        factor = 0.0  # V1.1新增内容!
         tau_base = critical = 0.0  # V1.2新增内容!
 
         c = 299792458.0
@@ -76,10 +89,10 @@ def mainstar(mass=None, metallicity=None, end_time=None, step_size=None, refresh
             M = mass
         else:
             while True:
-                print("请输入恒星质量(0.8-1.6Msun):")
+                print("请输入恒星质量(0.8-8.0Msun):")
                 try:
                     M = float(input())
-                    if M < 0.799 or M > 1.601:
+                    if M < 0.799 or M > 8.001:
                         print("输入无效！请重新输入！")
                         continue
                     break
@@ -102,11 +115,18 @@ def mainstar(mass=None, metallicity=None, end_time=None, step_size=None, refresh
                     print("输入无效！请重新输入！")
 
         # 计算参数
-        beta = math.pow((z / 0.02), (-0.05)) * 0.15
-        gamma = math.pow((z / 0.02), (-0.10)) * 0.20
         factor = math.pow((z / 0.02), (-0.025))
-        L = math.pow(M, 4.65) * (0.6 + math.pow(1.85, (-200 * z)))
-        tau_base = math.pow(M, -3) * 10000
+        if(M>=0.799 and M<=2.0):
+            L = math.pow(M, 4.65) * (0.6 + math.pow(1.85, (-200 * z)))
+        elif(M>2.0 and M<8.001):
+            L=(math.pow(M,4.2)+6.73)*(0.6+math.pow(1.85, (-200 * z)))
+        L0=L
+        if(M>0.799 and M<=2.0):
+            tau_base = math.pow(M, -3) * 10000
+        elif(M>2.0 and M<=3.33):
+            tau_base = math.pow(M, -3) *(0.3*M/0.6) * 10000
+        elif(M>3.33 and M<8.001):
+            tau_base = math.pow(M, -3) * (5.0/3.0) * 10000
         tau = math.pow((z / 0.02), 0.19953) * tau_base
         recommend = 0.002 * tau
         half = 0.5 * tau
@@ -165,7 +185,16 @@ def mainstar(mass=None, metallicity=None, end_time=None, step_size=None, refresh
         R0 = 0.9 * math.pow(M, 0.9) * factor
         R = R0
         Mc = math.pow(M, 0.6) * 0.57
-        k = ((85000) / (12160) * z + 0.860197) * (-0.71 * M + 1.435)
+        if(M>0.799 and M<=1.6):
+            k = ((85000.0) / (12160.0) * z + 0.860197) * (-0.71 * M + 1.435)
+        elif(M>1.6 and M<=2.0):
+            k=((85000.0/12160.0)*z+0.860197)*(-0.4475*M+1.015)
+        elif(M>2.0 and M<=3.0):
+            k= (-1.0 / 60.0) * M + (4.6 / 30.0) * ((85000 / 12160) * z + 0.860197)
+        elif(M>3.0 and M<=4.5):
+            k= (((-0.02)*M)+0.14)*((85000.0/12160.0)*z+0.860197)
+        elif(M>4.5 and M<=8.0):
+            k=(((-0.01)*M)+0.1)*((85000.0 / 12160.0) * z + 0.860197)
         Tc = 15000000 * math.pow(M, 0.34)
         T = math.pow((L / math.pow(R, 2)), 0.25) * 5773.15
         pp = math.pow((Tc / Tb), 5) / (math.pow((Tc / Tb), 5) + math.pow((Tc / Tb), 15)) * L
@@ -198,11 +227,12 @@ def mainstar(mass=None, metallicity=None, end_time=None, step_size=None, refresh
             Tc = (0.95 * k * ((mu - mu0) / mu0) + 1) * Tc0
             pp0 = pp
             cno0 = cno
+            L0 = L
             L = pp0 * math.pow((Tc / Tc0), 5) + cno0 * math.pow((Tc / Tc0), 15)
             pp = pp0 * math.pow((Tc / Tc0), 5)
             cno = cno0 * math.pow((Tc / Tc0), 15)  # 计算光度
             tau_r = ((t + dt) / tau)
-            R = R0 * ((0.1) * tau_r + beta * math.pow(tau_r, 2) + gamma * math.pow(tau_r, 3) + 1)
+            R = R *math.pow((L/L0),0.28)
             T = math.pow((L / math.pow(R, 2)), 0.25) * 5773.15
             data_texts = [
                 f"当前年龄: {t} Myr",

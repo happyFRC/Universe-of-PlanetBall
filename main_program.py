@@ -27,11 +27,10 @@ except ImportError:
     print("警告：未找到stellar_evolution_engine模块")
 
 pg.init()
-
 # 屏幕设置
 screen = pg.display.set_mode((960, 720))
 pg.display.set_caption('行星球宇宙-Universe of PlanetBall')
-pg.mixer.music.load("./Resources/music/♾️.wav")
+pg.mixer.music.load("./Resources/music/SubstituteForSunrise.wav")
 pg.mixer.music.play(-1)
 icon = pg.image.load("./Resources/assets/icon/icon.jpg")
 pg.display.set_icon(icon)
@@ -63,12 +62,17 @@ except Exception as e:
     selected_background.fill((20, 10, 40))
 
 
+
 # 设置当前背景
 current_background = menu_background
 is_in_engine_mode = False
 is_in_selecting_evo = False
 volume_status = False
-credits_status = False# 标记是否在引擎,选择背景模式
+credits_status = False
+evolution_pattern = False
+music1 = True
+music2 = False
+music3 = False# 标记是否在引擎,选择背景模式
 
 # 字体设置 - 使用支持中文的字体
 font_paths = [
@@ -122,11 +126,13 @@ class InputBox:
             if self.rect.collidepoint(event.pos):
                 self.active = True#点击在输入框矩形内激活输入框
             else:
+                input_boxes[2].tooltip = f"范围: 0.001-恒星寿命的80%（{star.get_tau(input_boxes[0].get_value(), input_boxes[1].get_value()) * 0.8}）"
                 self.active = False#乱点就滚，没有用，木大木大！
 
         if event.type == pg.KEYDOWN:#哥们你终于TM（商标缩写，没骂人）知道给输入框输入文字了
             if self.active:#这句话是说，只有输入框被激活让你输入你输入才有效，你永远救不活装死的人
                 if event.key == pg.K_RETURN:#你按回车了，输入框又睡着了但是内容保存了，其实就是你回车了就表示输入完成，可以滚了哈哈哈
+                    input_boxes[2].tooltip = f"范围: 0.001-恒星寿命的80%（{star.get_tau(input_boxes[0].get_value(), input_boxes[1].get_value()) * 0.8}）"
                     self.active = False
                 elif event.key == pg.K_BACKSPACE:#这句话就是你如果迷糊打错字了，给你个机会删了C重写，按一下back就删除一个
                     self.text = self.text[:-1]
@@ -422,10 +428,15 @@ start_engine_button = Button(650, 500, 300, 50, "恒星演化")
 sandbox_engine_button = Button(650, 555, 300, 50, "创建宇宙")
 credits = Button(650, 610, 300, 50, "制作人员")
 background_button_star = Button( 20, 75, 150, 50, "背景切换")
-volume_off_button = Button(750,20,200,50,"静音/开音")
+volume_off_button = Button(750,10,200,50,"静音/开音")
+bgm_choosing_button = Button(750 ,65,200,50,"切换背景音乐")
+engine_mode_button = Button(60, 150, 240, 420,"")
+giant_mode_button = Button(360,150,240,420,"")
+wd_mode_button = Button(660, 150,240,420,"")
 return_button = ReturnButton(20, 20, 150, 50,"返回主菜单")#返回按钮
 return_button_bgs = ReturnButton(20, 650, 200, 50, "返回参数界面" )
 return_button_in_sim = ReturnButton(20, 20,200,50,"结束演化计算" )
+return_button_pattern_choice = ReturnButton(20,20,200,50,"返回主菜单")
 background1 = Background_select_button(90,90 , 128, 96, "深蓝星空")
 background2 = Background_select_button(230,90 , 128, 96, "纯黑背景")#这是绘制按钮选择界面的按钮
 background3 = Background_select_button(370,90 , 128, 96, "乳白银河")
@@ -436,13 +447,14 @@ background7 = Background_select_button(230,290 , 128, 96, "暗紫银河")#这是
 background8 = Background_select_button(370,290 , 128, 96, "银河")#这是绘制按钮选择界面的按钮
 background9 = Background_select_button(510,290 , 128, 96, "简单星空")#这是绘制按钮选择界面的按钮
 # 创建恒星演化界面的按钮
-start_simulation_button = Button(250, 540, 200, 50, "开始模拟")
-reset_button = Button(500, 540, 200, 50, "重置参数")
+start_simulation_button = Button(180, 540, 200, 50, "开始模拟")
+get_recommend_args_button = Button(380, 540, 200, 50, "获取推荐参数")
+reset_button = Button(580, 540, 200, 50, "重置参数")
 # 创建输入框（带工具提示）
 input_boxes = [
-    InputBox(500, 160, 200, 40, "恒星质量 (Msun)", 250, "1.0", "范围: 0.8-1.6 太阳质量"),#这里终于想起来给输入框起名字了，感动哭了
+    InputBox(500, 160, 200, 40, "恒星质量 (Msun)", 250, "1.0", "范围: 0.8-8.0 太阳质量"),#这里终于想起来给输入框起名字了，感动哭了
     InputBox(500, 240, 200, 40, "金属度 (Z)", 250, "0.02", "范围: 0.001-0.03"),
-    InputBox(500, 320, 200, 40, "演化终点 (Myr)", 250, "4540", "建议不超过主序寿命的80%"),
+    InputBox(500, 320, 200, 40, "演化终点 (Myr)", 250, "4540", f"范围: 0.001-恒星寿命的80%（{star.get_tau(1.0, 0.02) * 0.8}）"),
     InputBox(500, 400, 200, 40, "演化步长 (Myr)", 250, "20", "推荐: 主序寿命的0.2%"),
     InputBox(500, 480, 200, 40, "刷新间隔 (秒)", 250, "1", "控制输出速度"),
 ]
@@ -541,7 +553,6 @@ def play_credits_video(video):
 while running:
     current_time = pg.time.get_ticks()#定义变量
     mouse_pos = pg.mouse.get_pos()
-
     current_emotion_second = int(time.time())
     if current_emotion_second != last_emotion_second and current_emotion_second % 2 == 0:
         star_instance.emotion.choice_param = random.randint(1, 2)
@@ -561,15 +572,16 @@ while running:
             status_timer = current_time + 1500
 
         # 检查按钮点击
-        if not is_in_engine_mode and not is_in_selecting_evo and not simulation_running:
+        if not is_in_engine_mode and not is_in_selecting_evo and not evolution_pattern and not simulation_running:
             # 主菜单模式下的按钮点击
             if quit_button.check_click(mouse_pos, event):
                 running = False
 
             elif start_engine_button.check_click(mouse_pos, event):#点了恒星演化以后显示的文字
                 # 切换到引擎模式
-                is_in_engine_mode = True
+                evolution_pattern = True
                 is_in_selecting_evo = False
+                is_in_engine_mode = False
                 current_background = selected_background#换背景图在这里！！！！
                 status_text = "已进入恒星演化模式"
                 status_timer = current_time + 2000#咱得让文字呆一会儿，2s，不能闪现
@@ -589,12 +601,44 @@ while running:
                     status_timer = current_time + 1500
             elif credits.check_click(mouse_pos, event):
                 credits_status = True#这里是试图播放的模块，路径./Resources/movies/credits.mp4
+            elif bgm_choosing_button.check_click(mouse_pos, event):
+                if(music2 == True):
+                    pg.mixer.music.load("./Resources/music/Freeze.wav")
+                    pg.mixer.music.play(-1)
+                    status_text = "已切换至Freeze.wav"
+                    status_timer = current_time + 1500
+                    music2 = False
+                    music3 =True
+                elif (music3 == True):
+                    pg.mixer.music.load("./Resources/music/SubstituteForSunrise.wav")
+                    pg.mixer.music.play(-1)
+                    status_text = "已切换至Substitute For Sunrise.wav"
+                    status_timer = current_time + 1500
+                    music3 = False
+                    music1 = True
+                elif (music1 == True):
+                    pg.mixer.music.load("./Resources/music/infinity.wav")
+                    pg.mixer.music.play(-1)
+                    status_text = "已切换至infinity.wav"
+                    status_timer = current_time + 1500
+                    music1 = False
+                    music2 = True
+        elif evolution_pattern == True and is_in_selecting_evo == False and is_in_engine_mode == False and not simulation_running:
+            if engine_mode_button.check_click(mouse_pos, event):
+                evolution_pattern = False
+                is_in_engine_mode = True
+                is_in_selecting_evo = False
+                simulation_running = False
+            elif return_button_pattern_choice.check_click(mouse_pos, event):
+                evolution_pattern = False
+                is_in_engine_mode = False
+                is_in_selecting_evo = False
+                simulation_running = False
+                current_background = menu_background
 
 
 
-
-
-        elif is_in_selecting_evo == False and is_in_engine_mode and not simulation_running:
+        elif is_in_selecting_evo == False and is_in_engine_mode == True and not simulation_running and not evolution_pattern:
             # 引擎模式下的按钮点击
             if return_button.check_click(mouse_pos, event):
                 # 返回主菜单
@@ -610,6 +654,14 @@ while running:
                 simulation_running = False
                 status_text = "进入背景选择模式" if is_in_selecting_evo else "退出背景选择模式"
                 status_timer = current_time + 1500
+            elif get_recommend_args_button.check_click(mouse_pos, event) and not simulation_running:
+                status_text = f"已经获取推荐参数"
+                status_timer = current_time + 1500
+                tau = star.get_tau(input_boxes[0].get_value(), input_boxes[1].get_value())
+                input_boxes[2].text = str(tau * 0.8)
+                input_boxes[3].text = str(tau * 0.002)
+                input_boxes[2].text_surf = input_font.render(input_boxes[2].text, True, (255, 255, 255))
+                input_boxes[3].text_surf = input_font.render(input_boxes[3].text, True, (255, 255, 255))
             elif start_simulation_button.check_click(mouse_pos, event) and not simulation_running:
                 is_in_selecting_evo = False
                 is_in_engine_mode = False
@@ -624,8 +676,8 @@ while running:
                     # 参数验证
                     errors = []  # 你小子有TM乱打字是吧，当我的程序是傻子？和我一样》等等，我好像说了不该说的
 
-                    if mass < 0.799 or mass > 1.601:
-                        errors.append("质量需在0.8-1.6Msun之间")
+                    if mass < 0.799 or mass > 8.001:
+                        errors.append("质量需在0.8-8.0Msun之间")
                         simulation_running = False
                         is_in_engine_mode = True
 
@@ -634,8 +686,8 @@ while running:
                         simulation_running = False
                         is_in_engine_mode = True
 
-                    if end_time <= 0:
-                        errors.append("演化终点必须大于0")
+                    if end_time <= 0 or end_time > (star.get_tau(mass, metallicity) * 0.8) + 0.001:
+                        errors.append(f"演化终点必须大于0且小于恒星寿命的80%（{star.get_tau(mass, metallicity) * 0.8}）")
                         simulation_running = False
                         is_in_engine_mode = True
 
@@ -735,7 +787,7 @@ while running:
                 for box in input_boxes:
                     box.handle_event(event)  # 循环回去
 
-        elif is_in_selecting_evo == True and is_in_engine_mode == False:
+        elif is_in_selecting_evo == True and is_in_engine_mode == False and evolution_pattern == False:
             if return_button.check_click(mouse_pos, event):
                 is_in_selecting_evo = False
                 is_in_engine_mode = True
@@ -787,10 +839,16 @@ while running:
         sandbox_engine_button.check_hover(mouse_pos)
         start_engine_button.check_hover(mouse_pos)
         volume_off_button.check_hover(mouse_pos)
+        bgm_choosing_button.check_hover(mouse_pos)
+    elif not is_in_engine_mode and not simulation_running and not is_in_selecting_evo and evolution_pattern == True:
+        engine_mode_button.check_hover(mouse_pos)
+        giant_mode_button.check_hover(mouse_pos)
+        wd_mode_button.check_hover(mouse_pos)
     elif is_in_engine_mode and not simulation_running:#这就就是你不在主菜单，就检查界面里的悬停状态
         return_button.check_hover(mouse_pos)
         background_button_star.check_hover(mouse_pos)
         start_simulation_button.check_hover(mouse_pos)
+        get_recommend_args_button.check_hover(mouse_pos)
         reset_button.check_hover(mouse_pos)
     elif is_in_selecting_evo and not is_in_engine_mode and not simulation_running:
         background1.check_hover(mouse_pos)
@@ -811,7 +869,7 @@ while running:
     # 绘制背景
     screen.blit(current_background,(0,0))#每次绘制按钮
 
-    if not is_in_engine_mode and not is_in_selecting_evo and not simulation_running:
+    if not is_in_engine_mode and not is_in_selecting_evo and not simulation_running and not evolution_pattern:
         # 主菜单界面
         title = title_font.render("行星球宇宙", True, (255, 255, 255))
         subtitle = subtitle_font.render("Universe of PlanetBall", True, (200, 200, 255))
@@ -829,17 +887,43 @@ while running:
         sandbox_engine_button.draw(screen)
         credits.draw(screen)
         volume_off_button.draw(screen)
+        bgm_choosing_button.draw(screen)
 
         # 绘制版本信息
         info_texts = [
-            "当前版本：Test-V2.0",
-            "版本发布日期：2025年12月15日",
+            "当前版本：Test-V2.1",
+            "版本发布日期：预计2026年1月1日",
         ]
 
         for i, text in enumerate(info_texts):
             info_surf = small_font.render(text, True, (255, 255, 255))
             screen.blit(info_surf, (20, 650 + i * 30))
-    elif is_in_engine_mode==True and is_in_selecting_evo == False:
+    elif evolution_pattern == True and not is_in_engine_mode and not is_in_selecting_evo:
+     engine_mode_button.draw(screen)
+     giant_mode_button.draw(screen)
+     wd_mode_button.draw(screen)
+     return_button_pattern_choice.draw(screen)
+     pattern_title_font = pg.font.Font(None, 50) if font is None else pg.font.Font(
+         font_paths[0] if os.path.exists(font_paths[0]) else None, 50)
+     pattern_title = pattern_title_font.render("选择演化模块", True, (255, 255, 0))
+     screen.blit(pattern_title, (330, 10))
+     mainseq_title_font = pg.font.Font(None, 50) if font is None else pg.font.Font(
+         font_paths[0] if os.path.exists(font_paths[0]) else None, 30)
+     mainseq_title = mainseq_title_font.render("恒星主序演化", True, (100, 255, 100))
+     screen.blit(mainseq_title, (90, 525))
+     giant_title_font = pg.font.Font(None, 30) if font is None else pg.font.Font(
+         font_paths[0] if os.path.exists(font_paths[0]) else None, 30)
+     giant_title = giant_title_font.render("敬请期待", True, (255, 100, 100))
+     screen.blit(giant_title, (420, 525))
+     wd_title_font = pg.font.Font(None, 30) if font is None else pg.font.Font(
+         font_paths[0] if os.path.exists(font_paths[0]) else None, 30)
+     wd_title = wd_title_font.render("敬请期待", True, (100, 100, 255))
+     screen.blit(wd_title, (720, 525))
+     main_sequence_tex = pg.image.load("./Resources/assets/button_textures/evolution_evolution.png").convert_alpha()
+     pg.transform.scale(main_sequence_tex, (900,675))
+     screen.blit(main_sequence_tex, (-150, 150))
+
+    elif is_in_engine_mode==True and is_in_selecting_evo == False and evolution_pattern == False:
         # 恒星演化模式界面
         return_button.draw(screen)
 
@@ -865,6 +949,7 @@ while running:
 
         # 绘制按钮
         start_simulation_button.draw(screen)
+        get_recommend_args_button.draw(screen)
         reset_button.draw(screen)
         background_button_star.draw(screen)
 
