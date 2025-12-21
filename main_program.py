@@ -447,17 +447,17 @@ background7 = Background_select_button(230,290 , 128, 96, "暗紫银河")#这是
 background8 = Background_select_button(370,290 , 128, 96, "银河")#这是绘制按钮选择界面的按钮
 background9 = Background_select_button(510,290 , 128, 96, "简单星空")#这是绘制按钮选择界面的按钮
 # 创建恒星演化界面的按钮
-start_simulation_button = Button(180, 540, 200, 50, "开始模拟")
-get_recommend_args_button = Button(380, 540, 200, 50, "获取推荐参数")
-reset_button = Button(580, 540, 200, 50, "重置参数")
+start_simulation_button = Button(750, 110, 180, 50, "开始模拟")
+get_recommend_args_button = Button(750, 180, 180, 50, "演化到终点")
+reset_button = Button(750, 250, 180, 50, "重置参数")
 # 创建输入框（带工具提示）
 input_boxes = [
-    InputBox(500, 160, 200, 40, "恒星质量 (Msun)", 250, "1.0", "范围: 0.8-8.0 太阳质量"),#这里终于想起来给输入框起名字了，感动哭了
-    InputBox(500, 240, 200, 40, "金属度 (Z)", 250, "0.02", "范围: 0.001-0.03"),
-    InputBox(500, 320, 200, 40, "演化终点 (Myr)", 250, "4540", f"范围: 0.001-恒星寿命的80%（{star.get_tau(1.0, 0.02) * 0.8}）"),
-    InputBox(500, 400, 200, 40, "演化步长 (Myr)", 250, "20", "推荐: 主序寿命的0.2%"),
-    InputBox(500, 480, 200, 40, "刷新间隔 (秒)", 250, "1", "控制输出速度"),
-]
+    InputBox(420, 180, 250, 40, "恒星质量 (Msun)", 210, "1.0", "范围: 0.8-8.0 太阳质量"),#这里终于想起来给输入框起名字了，感动哭了
+    InputBox(420, 260, 250, 40, "金属度 (Z)", 210, "0.02", "范围: 0.001-0.03"),
+    InputBox(420, 340, 250, 40, "演化终点 (Myr)", 210, "4540", f"范围: 0.001-恒星寿命的80%（{star.get_tau(1.0, 0.02) * 0.8}）"),
+    InputBox(420, 420, 250, 40, "演化步长 (Myr)", 210, "20", "推荐: 主序寿命的0.2%"),
+    InputBox(420, 500,250,40,"演化步长（秒）",210,"1","每刷新一次的间隔秒数")]
+
 
 # 定义一下状态文本，还是用户体验这一块，这其实就是一类文字，懒得写class而已
 status_text = ""
@@ -891,8 +891,8 @@ while running:
 
         # 绘制版本信息
         info_texts = [
-            "当前版本：Test-V2.1",
-            "版本发布日期：预计2026年1月1日",
+            "当前版本：Y2025-N01",
+            "版本发布日期：2025年12月20日",
         ]
 
         for i, text in enumerate(info_texts):
@@ -930,16 +930,16 @@ while running:
         # 绘制标题
         engine_title_font = pg.font.Font(None, 40) if font is None else pg.font.Font(
             font_paths[0] if os.path.exists(font_paths[0]) else None, 40)
-        engine_title = engine_title_font.render("恒星演化引擎", True, (255, 255, 200))
+        engine_title = engine_title_font.render("恒星主序星阶段演化", True, (255, 255, 200))
 
         # 绘制半透明主面板
-        main_panel = pg.Surface((600, 500), pg.SRCALPHA)
-        pg.draw.rect(main_panel, (0, 0, 0, 100), (0, 0, 600, 500), border_radius=15)
-        pg.draw.rect(main_panel, (255, 255, 255, 80), (0, 0, 600, 500), width=3, border_radius=15)
+        main_panel = pg.Surface((550, 500), pg.SRCALPHA)
+        pg.draw.rect(main_panel, (0, 0, 0, 100), (0, 0, 550, 500), border_radius=15)
+        pg.draw.rect(main_panel, (255, 255, 255, 80), (0, 0, 550, 500), width=3, border_radius=15)
         screen.blit(main_panel, (180, 100))
 
         # 绘制标题
-        screen.blit(engine_title, (480 - engine_title.get_width() // 2, 110))
+        screen.blit(engine_title, (200, 120))
 
         # 绘制输入框和工具提示
         for box in input_boxes:
